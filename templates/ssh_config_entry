@@ -1,0 +1,3 @@
+Host %hostname%
+   Hostname %hostname%
+   User %ceph_user%
