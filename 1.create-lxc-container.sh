@@ -21,8 +21,9 @@ fi
 
 # ================= ceph host config =================
 
-for (( i=0; i<${#hosts[@]}; i++ )); do                                          # delete old lxd with the same name
-    echo "$(title "ceph host config" "delete LXD host:${hosts[i]}")"
+echo "$(title "ceph host config" "delete old lxd with the same name")"          # delete old lxd with the same name
+
+for (( i=0; i<${#hosts[@]}; i++ )); do
     echo "stop ${hosts[i]} from LXD"
     lxc stop ${hosts[i]}
     echo "delete ${hosts[i]} from LXD"
@@ -31,8 +32,9 @@ done
 
 # ==================================
 
-for (( i=0; i<${#hosts[@]}; i++ )); do                                          # init all lxd with hosts[]
-    echo "$(title "ceph host config" "create LXD host:${hosts[i]}")"
+echo "$(title "ceph host config" "init all lxd with hosts[]")"                  # init all lxd with hosts[]
+
+for (( i=0; i<${#hosts[@]}; i++ )); do
     echo "initial ${hosts[i]} for LXD"
     lxc launch ubuntu:16.04 ${hosts[i]}
     lxc config set ${hosts[i]} security.privileged true
@@ -69,16 +71,16 @@ echo "$(title "ceph host config" "setup ~/.ssh/config")"                        
 file_path="temp/ceph_etc_hosts"                                                 # containers DOWN
 # create %ceph_hosts% entry
 for (( i=0; i<${#hosts[@]}; i++ )); do
-  echo "${hosts[i]} ${host_ip[i]}" >> temp/ceph_hosts
+    echo "${hosts[i]} ${host_ip[i]}" >> temp/ceph_hosts
 done
 
 for (( i=0; i<${#hosts[@]}; i++ )); do
-  cp ./templates/etc_hosts $file_path
-  sed -i "s/%hostname%/${hosts[i]}/g" $file_path
-  sed -i "s/%ceph_hosts%/$(cat ceph_hosts)/g" $file_path
+    cp ./templates/etc_hosts $file_path
+    sed -i "s/%hostname%/${hosts[i]}/g" $file_path
+    sed -i "s/%ceph_hosts%/$(cat ceph_hosts)/g" $file_path
 
-  lxc file push $file_path ${hosts[i]}/etc/hosts
-  rm $file_path
+    lxc file push $file_path ${hosts[i]}/etc/hosts
+    rm $file_path
 done
 
 # ==================================
@@ -100,5 +102,3 @@ lxc push temp_ssh_config ${hosts[i]}/home/$deploy_user/.ssh/config
 # ==================================
 
 lxc start ${hosts[i]}                                                           # launch host
-
-# ================= ceph host config =================
