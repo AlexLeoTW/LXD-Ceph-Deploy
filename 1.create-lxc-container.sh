@@ -43,12 +43,14 @@ for (( i=0; i<${#hosts[@]}; i++ )); do
     lxc launch ubuntu:16.04 ${hosts[i]}
     lxc config set ${hosts[i]} security.privileged true
     lxc config set ${hosts[i]} limits.memory 2GB
+    lxc exec ${hosts[i]} -- mkdir -p /home/$deploy_user/.ssh
 done
 
 # ==================================
 
-title "ceph host config" "config /etc/hostname for ${hosts[i]}"                 # config /etc/hostname
-lxc exec ${hosts[i]} -- echo ${hosts[i]} > /etc/hostname
+# title "ceph host config" "config /etc/hostname for all hosts"                   # config /etc/hostname
+# lxc did this by default
+# lxc exec ${hosts[i]} -- "\'echo ${hosts[i]} > /etc/hostname\'"
 
 # ==================================
 
@@ -110,7 +112,6 @@ echo "***************"
 
 for (( i=0; i<${#hosts[@]}; i++ )); do
     echo "push to ${hosts[i]}"
-    lxc exec ${hosts[i]} -- mkdir -p /home/$deploy_user/.ssh
     lxc file push $file_path ${hosts[i]}/home/$deploy_user/.ssh/config
 done
 
