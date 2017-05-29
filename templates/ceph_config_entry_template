@@ -1,2 +1,2 @@
-[mon.%hostname%]
+[%type%.%hostname%]
     host = %hostname%
