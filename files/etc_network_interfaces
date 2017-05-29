@@ -1,7 +1,0 @@
-
-# static if configured by sw_setup.sh script
-auto eth0
-iface eth0 inet static
-address %host_ip%
-netmask %netmask%
-gateway %gateway%

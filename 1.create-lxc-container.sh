@@ -91,7 +91,7 @@ file_path="temp/ssh_config"
 
 for (( i=0; i<${#hosts[@]}; i++ )); do
     echo "writing ${hosts[i]} into $file_path"
-    cat files/ssh_config_template >> $file_path
+    cat templates/ssh_config_entry >> $file_path
     sed -i "s/%hostname%/${hosts[i]}/g" $file_path
     sed -i "s/%ceph_user%/$deploy_user/g" $file_path
 done
