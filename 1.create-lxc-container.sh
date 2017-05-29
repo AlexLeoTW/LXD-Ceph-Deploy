@@ -19,6 +19,8 @@ fi
 # create temp directory
 if [[ ! -d temp ]]; then
     mkdir temp
+else
+    rm temp/*
 fi
 
 # ================= ceph host config =================
@@ -69,11 +71,11 @@ done
 
 # ==================================
 
-title "ceph host config" "setup /etc/hosts"                                  # setup /etc/hosts
+title "ceph host config" "setup /etc/hosts"                                     # setup /etc/hosts
 file_path="temp/ceph_etc_hosts"                                                 # containers DOWN
 # create %ceph_hosts% entry
 for (( i=0; i<${#hosts[@]}; i++ )); do
-    echo "${hosts[i]} ${host_ip[i]}" >> temp/ceph_hosts
+    echo -e "${host_ip[i]}\t${hosts[i]}" >> temp/ceph_hosts
 done
 
 for (( i=0; i<${#hosts[@]}; i++ )); do
@@ -82,7 +84,7 @@ for (( i=0; i<${#hosts[@]}; i++ )); do
     lineReplace $file_path %ceph_hosts% "$(cat temp/ceph_hosts)"
 
     lxc file push $file_path ${hosts[i]}/etc/hosts
-    echo "*** config: ***"
+    echo -e "\n\n*** config: ***"
     cat $file_path
     echo "***************"
 
@@ -108,11 +110,13 @@ echo "***************"
 
 for (( i=0; i<${#hosts[@]}; i++ )); do
     echo "push to ${hosts[i]}"
-    lxc push temp_ssh_config ${hosts[i]}/home/$deploy_user/.ssh/config
+    lxc exec ${hosts[i]} -- mkdir -p /home/$deploy_user/.ssh
+    lxc file push $file_path ${hosts[i]}/home/$deploy_user/.ssh/config
 done
 
 # ==================================
 title "ceph host config" "launch host"                                          # launch host
 for (( i=0; i<${#hosts[@]}; i++ )); do
+    echo "launch ${hosts[i]}"
     lxc start ${hosts[i]}
 done

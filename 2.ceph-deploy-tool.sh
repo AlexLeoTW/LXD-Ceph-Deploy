@@ -45,7 +45,7 @@ title "ceph-deploy-tool" "push config.sh"                             # push con
 cp config.sh temp/config.sh
 sed -i "/deploy_user_pass/d" temp/config.sh
 for (( i = 0; i < ${#hosts}; i++ )); do
-    lxc push temp/config.sh ${hosts[i]}/home/$deploy_user/config.sh
+    lxc file push temp/config.sh ${hosts[i]}/home/$deploy_user/config.sh
 done
 rm temp/config.sh
 
