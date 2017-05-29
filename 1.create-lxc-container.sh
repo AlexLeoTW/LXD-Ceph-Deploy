@@ -69,7 +69,7 @@ done
 
 # ==================================
 
-title "ceph host config" "setup ~/.ssh/config"                                  # setup /etc/hosts
+title "ceph host config" "setup /etc/hosts"                                  # setup /etc/hosts
 file_path="temp/ceph_etc_hosts"                                                 # containers DOWN
 # create %ceph_hosts% entry
 for (( i=0; i<${#hosts[@]}; i++ )); do
@@ -79,9 +79,13 @@ done
 for (( i=0; i<${#hosts[@]}; i++ )); do
     cp ./templates/etc_hosts $file_path
     sed -i "s/%hostname%/${hosts[i]}/g" $file_path
-    sed -i "s/%ceph_hosts%/$(cat ceph_hosts)/g" $file_path
+    lineReplace $file_path %ceph_hosts% "$(cat temp/ceph_hosts)"
 
     lxc file push $file_path ${hosts[i]}/etc/hosts
+    echo "*** config: ***"
+    cat $file_path
+    echo "***************"
+
     rm $file_path
 done
 
@@ -98,9 +102,17 @@ for (( i=0; i<${#hosts[@]}; i++ )); do
     sed -i "s/%ceph_user%/$deploy_user/g" $file_path
 done
 
-title "ceph host config" "config ~/.ssh/config for ${hosts[i]}"
-lxc push temp_ssh_config ${hosts[i]}/home/$deploy_user/.ssh/config
+echo "*** config: ***"
+cat $file_path
+echo "***************"
+
+for (( i=0; i<${#hosts[@]}; i++ )); do
+    echo "push to ${hosts[i]}"
+    lxc push temp_ssh_config ${hosts[i]}/home/$deploy_user/.ssh/config
+done
 
 # ==================================
-
-lxc start ${hosts[i]}                                                           # launch host
+title "ceph host config" "launch host"                                          # launch host
+for (( i=0; i<${#hosts[@]}; i++ )); do
+    lxc start ${hosts[i]}
+done
