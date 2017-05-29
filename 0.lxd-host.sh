@@ -13,14 +13,14 @@ fi
 # ================= network config =================
 
 # do a quick system update
-echo "$(title "network config" "do a quick system update")"
+title "network config" "do a quick system update"
 apt update && apt upgrade -y
 
 # config bridge
-echo "$(title "network config" "install bridge-utils")"
+title "network config" "install bridge-utils"
 apt install bridge-utils -y
 
-echo "$(title "network config" "config bridge")"
+title "network config" "config bridge"
 if [[ $netif != "br0" ]]; then
    echo "" >> /etc/network/interfaces
    echo "# Bridged Setup" >> /etc/network/interfaces
@@ -40,10 +40,10 @@ sudo ifdown $netif && sudo ifup $netif && sudo ifup br0
 
 # ================= lxd config =================
 
-echo "$(title "lxd config" "install lxd & zfs package")"
+title "lxd config" "install lxd & zfs package"
 apt-get install lxd zfsutils-linux -y
 
-echo "$(title "lxd config" "manual init config")"
+title "lxd config" "manual init config"
 echo "recommand:"
 echo "
     Do you want to configure a new storage pool (yes/no) [default=yes]? yes

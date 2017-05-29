@@ -21,7 +21,7 @@ fi
 
 # ================= ceph host config =================
 
-echo "$(title "ceph host config" "delete old lxd with the same name")"          # delete old lxd with the same name
+title "ceph host config" "delete old lxd with the same name"                    # delete old lxd with the same name
 
 for (( i=0; i<${#hosts[@]}; i++ )); do
     echo "stop ${hosts[i]} from LXD"
@@ -32,7 +32,7 @@ done
 
 # ==================================
 
-echo "$(title "ceph host config" "init all lxd with hosts[]")"                  # init all lxd with hosts[]
+title "ceph host config" "init all lxd with hosts[]"                            # init all lxd with hosts[]
 
 for (( i=0; i<${#hosts[@]}; i++ )); do
     echo "initial ${hosts[i]} for LXD"
@@ -43,13 +43,13 @@ done
 
 # ==================================
 
-echo "$(title "ceph host config" "config /etc/hostname for ${hosts[i]}")"       # config /etc/hostname
+title "ceph host config" "config /etc/hostname for ${hosts[i]}"                 # config /etc/hostname
 lxc exec ${hosts[i]} -- echo ${hosts[i]} > /etc/hostname
 
 # ==================================
 
 for (( i=0; i<${#hosts[@]}; i++ )); do                                          # config static IP lxd host
-    echo "$(title "ceph host config" "config static IP for ${hosts[i]}")"       # containers DOWN
+    title "ceph host config" "config static IP for ${hosts[i]}"                 # containers DOWN
     lxc exec ${hosts[i]} -- cp /etc/network/interfaces /etc/network/interfaces.bak
     lxc stop ${hosts[i]}
     lxc file pull ${hosts[i]}/etc/network/interfaces temp/container_if
@@ -67,7 +67,7 @@ done
 
 # ==================================
 
-echo "$(title "ceph host config" "setup ~/.ssh/config")"                        # setup /etc/hosts
+title "ceph host config" "setup ~/.ssh/config"                                  # setup /etc/hosts
 file_path="temp/ceph_etc_hosts"                                                 # containers DOWN
 # create %ceph_hosts% entry
 for (( i=0; i<${#hosts[@]}; i++ )); do
@@ -85,7 +85,7 @@ done
 
 # ==================================
 
-echo "$(title "ceph host config" "setup ~/.ssh/config")"                        # setup ~/.ssh/config
+title "ceph host config" "setup ~/.ssh/config"                                  # setup ~/.ssh/config
                                                                                 # containers DOWN
 file_path="temp/ssh_config"
 
@@ -96,7 +96,7 @@ for (( i=0; i<${#hosts[@]}; i++ )); do
     sed -i "s/%ceph_user%/$deploy_user/g" $file_path
 done
 
-echo "$(title "ceph host config" "config ~/.ssh/config for ${hosts[i]}")"
+title "ceph host config" "config ~/.ssh/config for ${hosts[i]}"
 lxc push temp_ssh_config ${hosts[i]}/home/$deploy_user/.ssh/config
 
 # ==================================

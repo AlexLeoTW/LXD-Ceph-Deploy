@@ -21,7 +21,7 @@ fi
 
 # ================= ceph host config =================
                                                                                 # create ceph-deploy user
-echo "$(title "ceph-deploy-tool" "create ceph-deploy user [$deploy_user] in each host")"
+title "ceph-deploy-tool" "create ceph-deploy user [$deploy_user] in each host"
 
 for (( i=0; i<${#hosts}; i++ )); do
     # adduser --disabled-password --gecos "" $deploy_user
@@ -38,7 +38,7 @@ done
 
 # ==================================
 
-echo "$(title "ceph-deploy-tool" "push config.sh")"                             # push config.sh
+title "ceph-deploy-tool" "push config.sh"                             # push config.sh
 
 cp config.sh temp/config.sh
 sed -i "/deploy_user_pass/d" temp/config.sh
@@ -49,7 +49,7 @@ rm temp/config.sh
 
 # ==================================
 
-echo "$(title "ceph-deploy-tool" "config ceph repo")"                           # launch ceph preflight
+title "ceph-deploy-tool" "config ceph repo"                           # launch ceph preflight
 
 for (( i = 0; i < ${#hosts}; i++ )); do
     lxc file push files/ceph_install_1_preflight.sh ${hosts[i]}/home/$deploy_user/my-cluster/ceph_install_1_preflight.sh
@@ -59,7 +59,7 @@ done
 
 # ==================================
 
-echo "$(title "ceph-deploy-tool" "distrobute ssh keys")"                        # distrobute ssh keys
+title "ceph-deploy-tool" "distrobute ssh keys"                        # distrobute ssh keys
 
 for (( index=0; index<${#mon_hosts[@]}; index++ )); do
 
