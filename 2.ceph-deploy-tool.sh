@@ -7,6 +7,8 @@ deploy_user_pass=""
 
 # shellcheck source=config.sh
 source config.sh
+# shellcheck source=files/functions.sh
+source files/functions.sh
 
 # test for sudo
 if [[ $UID -ne 0 ]]; then

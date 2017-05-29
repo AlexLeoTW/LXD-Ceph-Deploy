@@ -7,6 +7,8 @@ gateway="192.168.1.1"
 deploy_user="ceph-deploy"
 # shellcheck source=config.sh
 source config.sh
+# shellcheck source=files/functions.sh
+source files/functions.sh
 
 # test for sudo
 if [[ $UID -ne 0 ]]; then
