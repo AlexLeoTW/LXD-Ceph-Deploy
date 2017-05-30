@@ -31,12 +31,11 @@ title "build-ceph-cluster" "build ceph.conf"                                    
 cp templates/ceph_conf_template temp/ceph.conf
 sed -i "s/%new_fsid%/$(uuidgen)/g" temp/ceph.conf
 
-mon_list="${mon_hosts[0]}"
-mon_ip_list="${mon_ip[0]}"
-for (( i=1; i<${#mon_hosts[@]}; i++ )); do
-   mon_list+=", ${mon_hosts[i]}"
-   mon_ip_list+=", ${mon_ip[i]}"
-done
+mon_list=$(arrayToString mon_hosts[@] ", ")
+mon_ip_list=$(arrayToString mon_ip[@] ", ")
+
+printf "mon_list=[%s]\n" "$mon_list"
+printf "mon_ip_list=[%s]\n" "$mon_ip_list"
 
 sed -i -- "s/%mon_hosts%/${mon_list}/g" temp/ceph.conf
 sed -i -- "s/%mon_ip%/${mon_ip_list}/g" temp/ceph.conf
@@ -64,13 +63,13 @@ lineReplace temp/ceph.conf %mon_hosts_detial% "$(cat temp/ceph.conf.mon)"
 lineReplace temp/ceph.conf %osd_hosts_detial% "$(cat temp/ceph.conf.osd)"
 lineReplace temp/ceph.conf %mds_hosts_detial% "$(cat temp/ceph.conf.mds)"
 
-rm ceph.conf.mon
-rm ceph.conf.osd
-rm ceph.conf.mds
+rm temp/ceph.conf.mon
+rm temp/ceph.conf.osd
+rm temp/ceph.conf.mds
 
-echo "*** config: ***"
+echo -e "\n\n*** ceph.conf: ***"
     cat temp/ceph.conf
-echo "***************"
+echo -e "******************\n\n"
 
 # ==================================
 
@@ -84,7 +83,7 @@ done
 
 # ==================================
 
-title "build-ceph-cluster" "really deploying cluster"                           # build ceph.conf
+title "build-ceph-cluster" "really deploying cluster"                           # really deploying cluster
 
 echo "installing ceph package for all lxc hosts"
 lxc exec ${mon_hosts[0]} -- ceph-deploy install "${mon_hosts[@]}"

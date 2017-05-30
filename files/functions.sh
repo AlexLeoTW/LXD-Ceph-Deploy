@@ -27,13 +27,10 @@ function lineReplace() {
 
 # (array, delimiter)
 function arrayToString() {
-    declare -a array=("${!1}")
-    result=''
-
-    for (( i=0; i<${#array[@]}-1; i++ )); do
-        result+="${array[i]}$2"
-    done
-    result+="${array[i]}"
+    declare -a argAry1=("${!1}")
+    # echo "${argAry1[@]}"
+    result="$(echo "${argAry1[@]}")"
+    result=$(echo "$result" | sed -e "s/ /, /g")
 
     echo $result
 }
