@@ -1,5 +1,7 @@
 #! /bin/bash
 
+cd "${0%/*}"
+
 deploy_user="ceph-deploy"
 source config.sh
 
@@ -17,10 +19,13 @@ apt install ceph-deploy -y
 
 # config firewell
 apt install ufw -y
+sed -i -- 's/IPV6=yes/IPV6=no/g' /etc/default/ufw
 ufw allow ssh
 ufw allow 6789/tcp
 ufw allow 6800:7300/tcp
+ufw enable
 ufw status
 
 # running as deploy_user
+chown -R $deploy_user:$deploy_user /home/$deploy_user
 su $deploy_user -c "ssh-keygen -t rsa -N \"\" -f /home/$deploy_user/.ssh/id_rsa"

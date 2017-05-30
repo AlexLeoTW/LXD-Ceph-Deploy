@@ -47,7 +47,7 @@ for (( i=0; i<${#hosts[@]}; i++ )); do
     sleep 10
     lxc exec ${hosts[i]} -- adduser --disabled-password --gecos "" $deploy_user
     lxc exec ${hosts[i]} -- apt update
-    # lxc exec ${hosts[i]} -- apt upgrade -y
+    lxc exec ${hosts[i]} -- apt upgrade -y
 done
 
 # ==================================
@@ -133,8 +133,8 @@ for (( i=0; i<${#hosts[@]}; i++ )); do
 done
 
 # ==================================
-title "ceph host config" "launch host"                                          # launch host
-for (( i=0; i<${#hosts[@]}; i++ )); do
-    echo "launch ${hosts[i]}"
-    lxc start ${hosts[i]}
-done
+# title "ceph host config" "launch host"                                          # launch host
+# for (( i=0; i<${#hosts[@]}; i++ )); do
+#     echo "launch ${hosts[i]}"
+#     lxc start ${hosts[i]}
+# done

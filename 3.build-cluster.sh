@@ -13,20 +13,21 @@ source files/functions.sh
 
 # test for sudo
 if [[ $UID -ne 0 ]]; then
-   echo "This script must be run as root"
-   exit 1
+    echo "This script must be run as root"
+    exit 1
 fi
 
 # create temp directory
 if [[ ! -d temp ]]; then
-   mkdir temp
+    mkdir temp
+else
+    rm temp/*
 fi
 
 # ================= build ceph cluster =================
 
 title "build-ceph-cluster" "build ceph.conf"                                    # build ceph.conf
 
-rm temp/ceph.conf*
 cp templates/ceph_conf_template temp/ceph.conf
 sed -i "s/%new_fsid%/$(uuidgen)/g" temp/ceph.conf
 
@@ -67,13 +68,18 @@ rm ceph.conf.mon
 rm ceph.conf.osd
 rm ceph.conf.mds
 
+echo "*** config: ***"
+    cat temp/ceph.conf
+echo "***************"
+
 # ==================================
 
 title "ceph host config" "mapping physical drives"                              # mapping physical drives
 for (( i=0; i<${#osd_hosts[@]}; i++ )); do
-  lxc stop ${osd_hosts[i]}
-  lxc config device add ${osd_hosts[i]} sda unix-block path=${osd_disks[i]}
-  lxc start ${osd_hosts[i]}
+    echo "lxc config device add ${osd_hosts[i]} sda unix-block path=${osd_disks[i]}"
+    lxc stop ${osd_hosts[i]}
+    lxc config device add ${osd_hosts[i]} sda unix-block path=${osd_disks[i]}
+    lxc start ${osd_hosts[i]}
 done
 
 # ==================================

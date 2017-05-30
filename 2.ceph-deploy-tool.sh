@@ -19,6 +19,8 @@ fi
 # create temp directory
 if [[ ! -d temp ]]; then
    mkdir temp
+else
+    rm temp/*
 fi
 
 # ================= ceph host config =================
@@ -57,29 +59,34 @@ for (( i = 0; i < ${#hosts}; i++ )); do                                         
     title "ceph-deploy-tool" "launch ceph preflight on ${hosts[i]}"
 
     lxc file push files/ceph_install_1_preflight.sh ${hosts[i]}/home/$deploy_user/ceph_install_1_preflight.sh
-    lxc exec ${hosts[i]} -- chmod +x /home/$deploy_user/ceph_install_1_preflight.sh
-    lxc exec ${hosts[i]} -- /home/$deploy_user/ceph_install_1_preflight.sh
+    lxc exec ${hosts[i]} -- bash -c "chmod +x /home/$deploy_user/ceph_install_1_preflight.sh"
+    lxc exec ${hosts[i]} -- bash -c "/home/$deploy_user/ceph_install_1_preflight.sh"
 done
 
 # ==================================
 
 title "ceph-deploy-tool" "distrobute ssh keys"                                  # distrobute ssh keys
 
-for (( index=0; index<${#mon_hosts[@]}; index++ )); do
+for (( i=0; i<${#mon_hosts[@]}; i++ )); do
 
     if [[ -f /home/$deploy_user/.ssh/id_rsa ]]; then
-        lxc exec ${mon_hosts[index]} -- ssh-keygen -t rsa -N "" -f /home/$deploy_user/.ssh/id_rsa
+        lxc exec ${mon_hosts[i]} -- "ssh-keygen -t rsa -N \"\" -f /home/$deploy_user/.ssh/id_rsa"
     fi
 
-    lxc file pull ${mon_hosts[index]}/home/$deploy_user/.ssh/id_rsa.pub temp/${mon_hosts[index]}.hostkey.pub
+    echo "pull id_rsa.pub from ${mon_hosts[i]}"
+    lxc file pull ${mon_hosts[i]}/home/$deploy_user/.ssh/id_rsa.pub temp/${mon_hosts[i]}.hostkey.pub
+    echo -e "\n\n*** key: ***"
+    cat temp/${mon_hosts[i]}.hostkey.pub
+    echo -e "************\n\n"
 
-    for (( i=0; i<${#hosts[@]}; i++ )); do
-        lxc file push temp/${mon_hosts[index]}.hostkey.pub ${hosts[i]}/home/$deploy_user/deplyHost.key
-        lxc exec ${hosts[i]} -- cat /home/$deploy_user/deplyHost.key >> /home/$deploy_user/.ssh/authorized_keys
-        lxc exec ${hosts[i]} -- rm /home/$deploy_user/deplyHost.key
+    for (( j=0; j<${#hosts[@]}; j++ )); do
+        echo "temp/${mon_hosts[i]}.hostkey.pub --> ${hosts[j]}/home/$deploy_user/deplyHost.key --> authorized_keys"
+        lxc file push temp/${mon_hosts[i]}.hostkey.pub ${hosts[j]}/home/$deploy_user/deplyHost.key
+        lxc exec ${hosts[j]} -- bash -c "cat /home/$deploy_user/deplyHost.key >> /home/$deploy_user/.ssh/authorized_keys"
+        lxc exec ${hosts[j]} -- bash -c "rm /home/$deploy_user/deplyHost.key"
     done
 
-    rm temp/${mon_hosts[index]}.hostkey.pub
+    rm temp/${mon_hosts[i]}.hostkey.pub
 
 done
 
