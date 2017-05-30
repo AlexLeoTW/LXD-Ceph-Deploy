@@ -1,10 +1,14 @@
 #! /bin/bash
 
+hosts=( )
 mon_hosts=( )
 mon_ip=( )
 osd_hosts=( )
 osd_disks=( )
 mds_hosts=( )
+deploy_user="ceph-deploy"
+# shellcheck disable=SC2164
+local_user="$(cd ~; pwd | sed "s/\/home\///g")"
 
 # shellcheck source=config.sh
 source config.sh
@@ -71,6 +75,8 @@ echo -e "\n\n*** ceph.conf: ***"
     cat temp/ceph.conf
 echo -e "******************\n\n"
 
+lxc file push temp/ceph.conf ${mon_hosts[0]}/home/$deploy_user/ceph.conf
+
 # ==================================
 
 title "ceph host config" "mapping physical drives"                              # mapping physical drives
@@ -83,22 +89,39 @@ done
 
 # ==================================
 
+title "build-ceph-cluster" "setup ssh key for manage node (${mon_hosts[0]})"    # setup ssh key for manage node
+if [[ ! -f ~/.ssh/id_rsa ]]; then
+    ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+fi
+echo -e "\n*** key: ***"
+cat ~/.ssh/id_rsa.pub
+echo -e "************\n"
+lxc exec ${mon_hosts[0]} -- bash -c "echo \"$(cat ~/.ssh/id_rsa.pub)\" >> /home/$deploy_user/.ssh/authorized_keys"
+
+# ==================================
+
 title "build-ceph-cluster" "really deploying cluster"                           # really deploying cluster
 
-echo "installing ceph package for all lxc hosts"
-lxc exec ${mon_hosts[0]} -- ceph-deploy install "${mon_hosts[@]}"
+lxc exec ${mon_hosts[0]} -- chown -R $deploy_user:$deploy_user /home/$deploy_user
+
+echo -e "installing ceph package for all lxc hosts\n"
+# shellcheck disable=SC2145
+sudossh "$local_user" "$deploy_user" "${mon_ip[0]}" "ceph-deploy install $(arrayToString hosts[@] " ")"
 
 echo "add the initial monitor(s) and gather the keys"
-lxc exec ${mon_hosts[0]} -- ceph-deploy mon create-initial
+sudossh "$local_user" "$deploy_user" "${mon_ip[0]}" 'ceph-deploy mon create-initial'
 
 for (( i=0; i<${#osd_hosts[@]}; i++ )); do
     echo "build osd ${osd_hosts[i]}:${osd_disks[i]}"
-    lxc exec ${mon_hosts[0]} -- ceph-deploy disk zap ${osd_hosts[i]}:${osd_disks[i]}
-    ceph-deploy osd create ${osd_hosts[i]}:${osd_disks[i]}
+    sudossh "$local_user" "$deploy_user" "${mon_ip[0]}" "ceph-deploy disk zap ${osd_hosts[i]}:${osd_disks[i]}"
+    sudossh "$local_user" "$deploy_user" "${mon_ip[0]}" "ceph-deploy osd create ${osd_hosts[i]}:${osd_disks[i]}"
 done
 
-lxc exec ${mon_hosts[0]} -- ceph-deploy admin ${mon_hosts[0]}
+ssh -o StrictHostKeyChecking=no ${deploy_user}@${mon_ip[0]} ceph-deploy admin ${mon_hosts[0]}
+for (( i=0; i<${#osd_hosts[@]}; i++ )); do
+    sudossh "$local_user" "$deploy_user" "${mon_ip[0]}" "ssh ${deploy_user}@${osd_hosts[i]} sudo chmod +r /etc/ceph/ceph.client.admin.keyring"
+done
 
-lxc exec ${mon_hosts[0]} -- chmod +r /etc/ceph/ceph.client.admin.keyring
-
-lxc exec ${mon_hosts[0]} -- ceph health
+echo -e "\n\n*** ceph health ***"
+sudossh "$local_user" "$deploy_user" "${mon_ip[0]}" "ceph health"
+echo -e "*******************\n\n"

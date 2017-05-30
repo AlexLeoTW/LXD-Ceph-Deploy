@@ -34,3 +34,12 @@ function arrayToString() {
 
     echo $result
 }
+
+# (local_user, remote_user, remote_ip, user_command)
+function sudossh() {
+    local_user="$1"
+    remote_user="$2"
+    remote_ip="$3"
+    user_command="$4"
+    sudo sudo -u ${local_user} ssh -o StrictHostKeyChecking=no ${remote_user}@${remote_ip} "$user_command"
+}

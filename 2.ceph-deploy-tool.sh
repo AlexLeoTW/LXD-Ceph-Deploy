@@ -84,6 +84,8 @@ for (( i=0; i<${#mon_hosts[@]}; i++ )); do
         lxc file push temp/${mon_hosts[i]}.hostkey.pub ${hosts[j]}/home/$deploy_user/deplyHost.key
         lxc exec ${hosts[j]} -- bash -c "cat /home/$deploy_user/deplyHost.key >> /home/$deploy_user/.ssh/authorized_keys"
         lxc exec ${hosts[j]} -- bash -c "rm /home/$deploy_user/deplyHost.key"
+
+        sudossh "$deploy_user" "$deploy_user" "${hosts[i]}" "echo SSH OK!"
     done
 
     rm temp/${mon_hosts[i]}.hostkey.pub
