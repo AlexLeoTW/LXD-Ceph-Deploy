@@ -4,8 +4,9 @@ netif=$(route | grep default | grep -oE '[^ ]+$')
 
 hosts=( mon0 osd0 osd1 mds0 )
 host_ip=( "192.168.1.100" "192.168.1.101" "192.168.1.102" "192.168.1.105" )
-netmask="255.255.255.0"
+netmask="24"
 gateway="192.168.1.1"
+nameserver="8.8.8.8"
 
 mon_hosts=( mon0 )
 mon_ip=( "192.168.1.100" )

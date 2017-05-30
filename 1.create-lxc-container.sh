@@ -4,6 +4,7 @@ hosts=( )
 host_ip=( )
 netmask="255.255.255.0"
 gateway="192.168.1.1"
+nameserver="192.168.1.1"
 deploy_user="ceph-deploy"
 # shellcheck source=config.sh
 source config.sh
@@ -36,14 +37,17 @@ done
 
 # ==================================
 
-title "ceph host config" "init all lxd with hosts[]"                            # init all lxd with hosts[]
-
 for (( i=0; i<${#hosts[@]}; i++ )); do
+    title "ceph host config" "init lxd: ${hosts[i]}"                            # init lxd: ${hosts[i]}
+
     echo "initial ${hosts[i]} for LXD"
     lxc launch ubuntu:16.04 ${hosts[i]}
     lxc config set ${hosts[i]} security.privileged true
     lxc config set ${hosts[i]} limits.memory 2GB
-    lxc exec ${hosts[i]} -- mkdir -p /home/$deploy_user/.ssh
+    sleep 10
+    lxc exec ${hosts[i]} -- adduser --disabled-password --gecos "" $deploy_user
+    lxc exec ${hosts[i]} -- apt update
+    # lxc exec ${hosts[i]} -- apt upgrade -y
 done
 
 # ==================================
@@ -55,20 +59,30 @@ done
 # ==================================
 
 for (( i=0; i<${#hosts[@]}; i++ )); do                                          # config static IP lxd host
-    title "ceph host config" "config static IP for ${hosts[i]}"                 # containers DOWN
+    title "ceph host config" "config static IP for ${hosts[i]}"
+    lxc exec ${hosts[i]} -- apt install network-manager -y
+
+    # remove ifupdown config
     lxc exec ${hosts[i]} -- cp /etc/network/interfaces /etc/network/interfaces.bak
-    lxc stop ${hosts[i]}
-    lxc file pull ${hosts[i]}/etc/network/interfaces temp/container_if
-    cat templates/etc_network_interfaces_static_ip >> temp/container_if
-    sed -i 's/^source/#source/g' temp/container_if
-    sed -i "s/%host_ip%/${host_ip[i]}/g" temp/container_if
-    sed -i "s/%netmask%/${netmask}/g" temp/container_if
-    sed -i "s/%gateway%/${gateway}/g" temp/container_if
+    lxc exec ${hosts[i]} -- sed -i 's/^source/#source/g' /etc/network/interfaces
+
+    # config NetworkManager
+    lxc exec ${hosts[i]} -- systemctl start network-manager
+    lxc exec ${hosts[i]} -- systemctl enable network-manager
+    lxc exec ${hosts[i]} -- nmcli con add type ethernet con-name eth0 ifname eth0 ip4 ${host_ip[i]}/${netmask} gw4 ${gateway}
+    lxc exec ${hosts[i]} -- nmcli con mod eth0 ipv4.dns "8.8.8.8 8.8.4.4"
+    lxc exec ${hosts[i]} -- nmcli con up eth0
+    sleep 5
+    lxc exec ${hosts[i]} -- nmcli dev disconnect eth0
+    sleep 2
+    lxc exec ${hosts[i]} -- nmcli dev connect eth0
+    sleep 2
+
     echo "*** config: ***"
-    cat temp/container_if
+    lxc exec ${hosts[i]} -- cat /etc/NetworkManager/system-connections/eth0
     echo "***************"
-    lxc file push temp/container_if ${hosts[i]}/etc/network/interfaces
-    rm temp/container_if
+    lxc exec ${hosts[i]} -- nmcli con show
+
 done
 
 # ==================================
@@ -77,6 +91,7 @@ title "ceph host config" "setup /etc/hosts"                                     
 file_path="temp/ceph_etc_hosts"                                                 # containers DOWN
 # create %ceph_hosts% entry
 for (( i=0; i<${#hosts[@]}; i++ )); do
+    lxc stop ${hosts[i]}
     echo -e "${host_ip[i]}\t${hosts[i]}" >> temp/ceph_hosts
 done
 
@@ -112,6 +127,8 @@ echo "***************"
 
 for (( i=0; i<${#hosts[@]}; i++ )); do
     echo "push to ${hosts[i]}"
+    lxc start ${hosts[i]}
+    lxc exec ${hosts[i]} -- mkdir -p /home/$deploy_user/.ssh
     lxc file push $file_path ${hosts[i]}/home/$deploy_user/.ssh/config
 done
 

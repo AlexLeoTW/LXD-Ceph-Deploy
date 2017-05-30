@@ -5,7 +5,7 @@ mon_host = %mon_ip%
 auth_cluster_required = cephx
 auth_service_required = cephx
 auth_client_required = cephx
-osd pool default size = %osd_size%
+osd pool default size = 2
 
 %mon_hosts_detial%
 
